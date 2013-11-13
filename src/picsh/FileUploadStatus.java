@@ -1,0 +1,6 @@
+package picsh;
+
+public enum FileUploadStatus
+{
+	OK, INVALID_REQUEST, SERVER_ERROR, NO_FILE, FILE_TOO_LARGE, ERROR_IN_FILE, DISSALLOWED_FILE_TYPE
+}
