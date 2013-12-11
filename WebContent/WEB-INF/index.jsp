@@ -1,18 +1,19 @@
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" type="text/css" href="default.css">
 <script type="text/javascript" src="./jquery-2.0.3.min.js"></script>
 <script type="text/javascript" src="./engine.js"></script>
-<title>picsh</title>
+<link rel="SHORTCUT ICON" href="Logo.ico" type="image/x-icon">
+<title>Picsh</title>
 </head>
 <body>
     <div id="sidebar-menu">
 
         <div id="upload-section">
-            <form id="upload-form" enctype="multipart/form-data" method="POST" action="./post-image" onsubmit="tryUploadImage(); return false;">
+            <form id="upload-form" enctype="multipart/form-data" method="POST" action="./post-image">
                 <div id="file-drop-zone">
                     <input id="file-input" type="file" name="image-file" required="required" />
                     <span id="file-drop-text">Datei ausw&auml;hlen/ablegen</span>
@@ -55,12 +56,14 @@
     <div id="thumb-list-section">${ thumbListHtml }</div>
     <div id="scaled-img-overlay" style="display: none;">
         <div id="scaled-img-loader"></div>
-        <div id="current-scaled-img-wrapper" class="scaled-img-wrapper">
+        <div class="scaled-img-wrapper">
             <img id="current-scaled-img" class="scaled-img" />
         </div>
-        <div id="next-scaled-img-wrapper" class="scaled-img-wrapper">
+        <div class="scaled-img-wrapper">
             <img id="next-scaled-img" class="scaled-img" />
         </div>
+        <button class="scaled-img-nav-btn" id="scaled-img-nav-btn-left"></button>
+        <button class="scaled-img-nav-btn" id="scaled-img-nav-btn-right"></button>
     </div>
 
 </body>

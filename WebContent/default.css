@@ -256,7 +256,6 @@ img.thumb {
 }
 
 .comment {
-	/* comment delimiter */
 	border-bottom: 1px solid #444444;
 	margin: 0 0 10px 0;
 }
@@ -337,4 +336,35 @@ img.thumb {
 	right: 0;
 	bottom: 0;
 	z-index: 4;
+}
+
+#current-scaled-img
+{
+	z-index: 5;
+}
+
+.scaled-img-nav-btn {
+	display: block;
+	width: 69px;
+	height: 81px;
+	border: none;
+	border-radius: 5px;
+	background-color: rgba(255, 255, 255, 0.8);
+	background-repeat: no-repeat;
+	background-position: center;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	margin: auto;
+	z-index: 4;
+}
+
+#scaled-img-nav-btn-left {
+	left: 5%;
+	background-image: url("res/arr-left.png");
+}
+
+#scaled-img-nav-btn-right {
+	right: 5%;
+	background-image: url("res/arr-right.png");
 }

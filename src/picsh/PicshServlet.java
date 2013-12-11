@@ -130,7 +130,7 @@ public class PicshServlet extends HttpServlet
             String imgName = thumb.getName();
             String imgBaseName = imgName.substring(0, imgName.lastIndexOf('.'));
             String imgId = imgName.substring(0, imgName.lastIndexOf('.'));
-            ret.append(String.format("<div class=\"thumb-wrapper\" id=\"thumb-%s\">", imgId));
+            ret.append(String.format("<div class=\"thumb-wrapper\" id=\"thumb-%s\" imgid=\"%s\">", imgId, imgId));
             ret.append(String.format("<a class=\"thumb-link\" href=\"./#/fullsize/%s\">", imgName));
             ret.append(String.format("<img class=\"thumb\" src=\"thumb/%s.%s\" />", imgBaseName, thumbImgType));
             ret.append("</a></div>\n");

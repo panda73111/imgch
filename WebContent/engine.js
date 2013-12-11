@@ -23,9 +23,11 @@ function evalCmds(bInitializing)
         case "fullsize":
             // full size view
             // load the image
-            jCurrentScaledImg.attr("src", "./img/" + aCmds[2]);
+            var sImgId = aCmds[2].substr(0, aCmds[2].lastIndexOf('.'));
             if (jScaledImgOverlay.is(":hidden"))
             {
+                jCurrentScaledImg.attr("src", "./img/" + aCmds[2]);
+                jCurrentScaledImg.attr("imgid", sImgId);
                 if (bInitializing)
                 {
                     jScaledImgOverlay.add(jCommentSection).show();
@@ -37,11 +39,58 @@ function evalCmds(bInitializing)
                     jUploadSection.fadeOut(200);
                 }
             }
-            var sImgId = aCmds[2].substr(0, aCmds[2].lastIndexOf('.'));
+            else
+            {
+                jNextScaledImg.attr("src", "./img/" + aCmds[2]);
+                jNextScaledImg.attr("imgid", sImgId);
+
+                function swapScaledImgs()
+                {
+                    var jTemp = jCurrentScaledImg;
+                    jCurrentScaledImg = jNextScaledImg;
+                    jNextScaledImg = jTemp;
+                    
+                    jCurrentScaledImg.attr("id", "next-scaled-img");
+                    jNextScaledImg.attr(
+                            {
+                                id: "current-scaled-img",
+                                src: ""
+                            });
+                }
+
+                // fade from current to next image
+                jCurrentScaledImg
+                    .css("opacity", "1")
+                    .animate({opacity: "0"}, 200, "linear");
+                jNextScaledImg
+                    .css("opacity", "0")
+                    .animate({opacity: "1"}, 200, "linear", swapScaledImgs);
+            }
             jCommentImgIdInput.val(sImgId);
             loadComments(sImgId);
             break;
     }
+}
+
+function navToImage(sDirection)
+{
+    var sImgId = jCurrentScaledImg.attr("imgid");
+    var sNextImgId = "";
+    if (sDirection == "prev")
+    {
+        sNextImgId = (parseInt(sImgId) + 1).toString();
+    }
+    else if (sDirection == "next")
+    {
+        sNextImgId = (parseInt(sImgId) - 1).toString();
+    }
+
+    var sNextImgHref = $("#thumb-" + sNextImgId)
+        .find(".thumb-link")
+        .attr("href");
+
+    if (sNextImgHref != undefined)
+        location.href = sNextImgHref;
 }
 
 function toHumanFileSize(iBytes)
@@ -64,16 +113,17 @@ function loadComments(sImgId)
 {
     $.getJSON("./get-comments?imgid=" + sImgId, function(oData)
     {
-        jCommentList = $('<ul id="comment-list"></ul>');
+        sCommentList = '<ul id="comment-list">';
         $.each(oData, function(i, oComment)
         {
-            jCommentList.append('<li class="comment">'
+            sCommentList += '<li class="comment">'
                     + '<a class="comment-name" href="mailto:' + oComment.email
                     + '">' + oComment.name + '</a>'
                     + '<blockquote class="comment-text">' + oComment.text
-                    + '</blockquote></li>');
+                    + '</blockquote></li>';
         });
-        jCommentListWrapper.append(jCommentList);
+        sCommentList += '</ul>';
+        jCommentListWrapper.html(sCommentList);
         jCommentListWrapper.click(function(oEvent)
         {
             // if the mailto: link is empty, block clicking
@@ -121,10 +171,6 @@ function tryPostComment()
 
 function tryUploadImage()
 {
-    if (oSelFile === null)
-        // no file selected, let browser indicate an error
-        return;
-
     bSending = true;
 
     jFileInfoLoaderWrapper.fadeIn(200);
@@ -139,6 +185,7 @@ function tryUploadImage()
     {
         if (oEvent.type == "load" && oEvent.target.response == "OK")
         {
+            // upload successful
             jFileInfoStatus.text("Sende... 100%");
             location.reload();
         }
@@ -168,12 +215,13 @@ function tryUploadImage()
     oReq.send(oData);
 
     // block browser redirect
-    return;
+    return true;
 }
 
 function validateFile(oFile)
 {
     if (oFile.type.substr(0, 6) != "image/")
+        // selected file is no image
         return;
 
     var oReader = new FileReader();
@@ -226,6 +274,8 @@ function onFileDropZoneDragOver(oEvent)
         return;
 
     jFileDropZone.addClass("dragged");
+    
+    // prevent the browser from trying to open the dropped file
     oEvent.stopPropagation();
     oEvent.preventDefault();
 }
@@ -247,6 +297,11 @@ function onFileDropZoneDrop(oEvent)
 
     onFileDropZoneDragLeave(oEvent);
     var oFile = oEvent.originalEvent.dataTransfer.files[0];
+    
+    if (oFile === undefined)
+        // dropped item was not a file
+        return;
+    
     validateFile(oFile);
 }
 
@@ -266,14 +321,55 @@ function onFileInputChange(oEvent)
     validateFile(oFile);
 }
 
-function onScaledImgOverlayClicked(oEvent)
+function onFileUploadButtonClick()
 {
-    location.href = "./#/";
+    if (oSelFile === null)
+        // no file selected, let browser indicate an error
+        return true;
+
+    tryUploadImage();
+    return false;
 }
 
-function onWindowResize(oEvent)
+function onScaledImgOverlayClicked(oEvent)
 {
+    var nElem = oEvent.target;
+    if (nElem.classList.contains("scaled-img-nav-btn"))
+    {
+        navToImage(nElem.id == "scaled-img-nav-btn-left" ? "prev" : "next");
+        return false;
+    }
+    location.href = "./#/";
+    return true;
+}
 
+function onWindowKeydown(oEvent)
+{
+    if (jScaledImgOverlay.is(":hidden"))
+        return;
+    
+    switch (oEvent.target.nodeName)
+    {
+        case "TEXTAREA":
+        case "INPUT":
+            // allow cursor navigation within text inputs
+            return;
+    }
+    
+    switch (oEvent.keyCode)
+    {
+        case 39:
+            // right arrow
+            navToImage("next");
+            break;
+        case 37:
+            // left arrow
+            navToImage("prev");
+            break;
+        default:
+            return true;
+    }
+    return false;
 }
 
 var iMaxUploadImgByteSize = 5 * 1024 * 1024;
@@ -284,6 +380,7 @@ var bSending, oSelFile;
 var jScaledImgOverlay;
 var jCurrentScaledImg, jNextScaledImg;
 var jScaledImgLoader;
+var jNavBtnLeft, jNavBtnRight;
 
 var jSidebarMenu;
 
@@ -291,86 +388,85 @@ var jUploadSection, jUploadForm, jFileDropZone, jFileInput;
 
 var jFileInfoWrapper, jFileInfoName, jFileInfoSize, jFileInfoStatus;
 var jFileInfoPrev, jFileInfoPrevWrapper, jFileInfoLoaderWrapper, jFileDropText;
+var jFileSubmitButton;
 
 var jCommentSection, jCommentListWrapper, jCommentList;
 var jCommentForm, jCommentNameInput, jCommentEmailInput;
 var jCommentImgIdInput, jCommentTextInput;
 
-$(document)
-        .ready(
-                function()
-                {
-                    if (location.hash.substr(0, 2) != "#/")
-                    {
-                        location.href = "./#/";
-                    }
+$(document).ready(function()
+    {
+        if (location.hash.substr(0, 2) != "#/")
+        {
+            location.href = "./#/";
+        }
 
-                    onWindowResize();
-                    $(window).resize(onWindowResize);
+        $(window).keydown(onWindowKeydown);
 
-                    bSending = false;
+        bSending = false;
 
-                    jSidebarMenu = $("#sidebar-menu");
+        jSidebarMenu = $("#sidebar-menu");
 
-                    jUploadSection = jSidebarMenu.find("#upload-section");
-                    jUploadForm = jUploadSection.find("#upload-form");
+        jUploadSection = jSidebarMenu.find("#upload-section");
+        jUploadForm    = jUploadSection.find("#upload-form");
 
-                    jFileInput = jUploadSection.find("#file-input");
-                    jFileInput.change(onFileInputChange);
-                    jFileInput.val("");
-                    jFileDropZone = jUploadSection.find("#file-drop-zone");
-                    jFileDropZone.on("dragover", onFileDropZoneDragOver);
-                    jFileDropZone.on("dragleave", onFileDropZoneDragLeave);
-                    jFileDropZone.on("drop", onFileDropZoneDrop);
-                    jFileDropZone.click(onFileDropZoneClick);
-                    jFileDropText = jUploadSection.find("#file-drop-text");
+        jFileInput = jUploadSection
+            .find("#file-input")
+            .change(onFileInputChange)
+            .val("");
+        jFileDropZone = jUploadSection
+            .find("#file-drop-zone")
+            .on({
+                    dragover:  onFileDropZoneDragOver,
+                    dragleave: onFileDropZoneDragLeave,
+                    drop:      onFileDropZoneDrop,
+                    click:     onFileDropZoneClick
+            });
+        jFileDropText = jUploadSection.find("#file-drop-text");
+        jFileSubmitButton      = jUploadSection
+            .find("#file-submit-button")
+            .click(onFileUploadButtonClick);
 
-                    jFileInfoWrapper = jUploadSection
-                            .find("#file-info-wrapper");
-                    jFileInfoPrevWrapper = jFileInfoWrapper
-                            .find("#file-info-preview-wrapper");
-                    jFileInfoPrev = jFileInfoPrevWrapper
-                            .find("#file-info-preview");
-                    jFileInfoPrev.load(function(oEvent)
-                    {
-                        jFileInfoPrevWrapper.fadeIn(200);
-                    });
-                    jFileInfoLoaderWrapper = jFileInfoWrapper
-                            .find("#file-info-loader-wrapper");
-                    jFileInfoName = jFileInfoWrapper.find("#file-info-name");
-                    jFileInfoSize = jFileInfoWrapper.find("#file-info-size");
-                    jFileInfoStatus = jFileInfoWrapper
-                            .find("#file-info-status");
+        jFileInfoWrapper     = jUploadSection.find("#file-info-wrapper");
+        jFileInfoPrevWrapper = jFileInfoWrapper.find("#file-info-preview-wrapper");
+        jFileInfoPrev        = jFileInfoPrevWrapper
+            .find("#file-info-preview")
+            .load(function(oEvent)
+            {
+                jFileInfoPrevWrapper.fadeIn(200);
+            });
+        jFileInfoLoaderWrapper = jFileInfoWrapper.find("#file-info-loader-wrapper");
+        jFileInfoName          = jFileInfoWrapper.find("#file-info-name");
+        jFileInfoSize          = jFileInfoWrapper.find("#file-info-size");
+        jFileInfoStatus        = jFileInfoWrapper.find("#file-info-status");
 
-                    oSelFile = null;
+        oSelFile = null;
 
-                    jCommentSection = jSidebarMenu.find("#comment-section");
-                    jCommentListWrapper = jCommentSection
-                            .find("#comment-list-wrapper");
-                    jCommentList = null;
-                    jCommentForm = jCommentSection.find("#comment-form");
-                    jCommentNameInput = jCommentSection
-                            .find("#comment-name-input");
-                    jCommentEmailInput = jCommentSection
-                            .find("#comment-email-input");
-                    jCommentImgIdInput = jCommentSection
-                            .find("#comment-imgid-input");
-                    jCommentTextInput = jCommentSection
-                            .find("#comment-text-input");
+        jCommentSection     = jSidebarMenu.find("#comment-section");
+        jCommentListWrapper = jCommentSection.find("#comment-list-wrapper");
+        jCommentList        = null;
+        jCommentForm        = jCommentSection.find("#comment-form");
+        jCommentNameInput   = jCommentSection.find("#comment-name-input");
+        jCommentEmailInput  = jCommentSection.find("#comment-email-input");
+        jCommentImgIdInput  = jCommentSection.find("#comment-imgid-input");
+        jCommentTextInput   = jCommentSection.find("#comment-text-input");
 
-                    jScaledImgOverlay = $("#scaled-img-overlay");
-                    jScaledImgOverlay.click(onScaledImgOverlayClicked);
+        jScaledImgOverlay = $("#scaled-img-overlay")
+            .click(onScaledImgOverlayClicked);
 
-                    jScaledImgLoader = $("#scaled-img-loader");
-                    jCurrentScaledImg = $("#current-scaled-img");
-                    jCurrentScaledImg.on("load", function()
-                    {
-                        jScaledImgLoader.hide();
-                    });
-                    jNextScaledImg = $("#next-scaled-img");
+        jScaledImgLoader  = $("#scaled-img-loader");
+        jCurrentScaledImg = $("#current-scaled-img")
+            .on("load", function()
+            {
+                jScaledImgLoader.hide();
+            });
+        jNextScaledImg = $("#next-scaled-img");
 
-                    evalCmds(true);
-                });
+        jNavBtnLeft  = $("#scaled-img-nav-btn-left");
+        jNavBtnRight = $("#scaled-img-nav-btn-right");
+
+        evalCmds(true);
+    });
 
 $(window).on("hashchange", function()
 {
