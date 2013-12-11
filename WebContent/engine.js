@@ -12,6 +12,7 @@ function evalCmds(bInitializing)
                     jCurrentScaledImg.attr("src", "");
                     jScaledImgLoader.show();
                 });
+                jMenuSection.fadeIn(200);
                 jUploadSection.fadeIn(200);
                 if (jCommentList != null)
                 {
@@ -32,11 +33,13 @@ function evalCmds(bInitializing)
                 {
                     jScaledImgOverlay.add(jCommentSection).show();
                     jUploadSection.hide();
+                    jMenuSection.hide();
                 }
                 else
                 {
                     jScaledImgOverlay.add(jCommentSection).fadeIn(200);
                     jUploadSection.fadeOut(200);
+                    jMenuSection.fadeOut(200);
                 }
             }
             else
@@ -147,7 +150,7 @@ function tryPostComment()
             location.reload();
         else
         {
-            alert("Beim Abschicken des Kommentars trat ein Fehler auf.\nBitte versuche es später noch einmal");
+            alert("Beim Abschicken des Kommentars trat ein Fehler auf.\nBitte versuche es spï¿½ter noch einmal");
         }
     }
 
@@ -385,6 +388,7 @@ var jNavBtnLeft, jNavBtnRight;
 var jSidebarMenu;
 
 var jUploadSection, jUploadForm, jFileDropZone, jFileInput;
+var jMenuSection;
 
 var jFileInfoWrapper, jFileInfoName, jFileInfoSize, jFileInfoStatus;
 var jFileInfoPrev, jFileInfoPrevWrapper, jFileInfoLoaderWrapper, jFileDropText;
@@ -407,6 +411,7 @@ $(document).ready(function()
 
         jSidebarMenu = $("#sidebar-menu");
 
+        jMenuSection = jSidebarMenu.find("#menu-section");
         jUploadSection = jSidebarMenu.find("#upload-section");
         jUploadForm    = jUploadSection.find("#upload-form");
 
