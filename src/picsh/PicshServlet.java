@@ -18,7 +18,6 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import sun.org.mozilla.javascript.internal.json.JsonParser;
 
 @SuppressWarnings("serial")
 @WebServlet(name = "picsh", urlPatterns = { "/index", "/post-image", "/post-comment", "/get-comments" })

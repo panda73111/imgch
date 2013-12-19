@@ -52,7 +52,7 @@
                 </form>
             </div>
             <div id="menu-section">
-                <a href="./" class="menu-button"> Home </a>
+                <a href="./" class="menu-button"> &gt;Home&lt; </a>
                 <a href="impressum.html" class="menu-button"> Impressum </a>
                 <a href="help.html" class="menu-button"> Hilfe </a>
                 <a href="disclamair.html" class="menu-button"> Haftungsausschluss </a>
